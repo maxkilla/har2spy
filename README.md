@@ -144,6 +144,51 @@ python3 har2spy.py analyze test.har.json -o test_analysis.json
 python3 har2spy.py generate test.har.json --lang python -o test_client.py
 ```
 
+## 🤖 MCP Integration
+
+har2spy can be used as an **MCP (Model Context Protocol) server**, allowing any AI agent that supports MCP (Claude, OpenAI Assistants, custom agents) to invoke har2spy commands natively.
+
+### Quick MCP Setup
+
+1. **Start the MCP server**:
+   ```bash
+   python3 mcp_server.py
+   ```
+
+2. **Configure your MCP client** (e.g., Claude Desktop):
+   ```json
+   {
+     "mcpServers": {
+       "har2spy": {
+         "command": "python3",
+         "args": ["/path/to/har2spy/mcp_server.py"]
+       }
+     }
+   }
+   ```
+
+3. **Use har2spy from your agent**:
+   - "Scan https://example.com for 'iPhone' and capture HAR"
+   - "Analyze the HAR file and show API endpoints"
+   - "Generate a Python API client from the captured data"
+   - "Discover database schemas from the network traffic"
+
+### Available MCP Tools
+
+| Tool | Description |
+|------|-------------|
+| `har2spy.scan` | Scan website, capture HAR, optional auto-detection |
+| `har2spy.analyze` | Analyze HAR for endpoints, query params, auth |
+| `har2spy.generate` | Generate Python/OpenAPI/cURL client code |
+| `har2spy.db-discovery` | Discover GraphQL, JSON schemas, DB connections |
+| `har2spy.version` | Show version info |
+
+### Resources
+
+- `har2spy://capabilities` — JSON list of capabilities
+
+See the **MCP Skill** at `/var/minis/skills/mcp/SKILL.md` for full details.
+
 ## 📞 Support
 
 For issues or feature requests, please open a discussion in the Minis app or contact the development team.

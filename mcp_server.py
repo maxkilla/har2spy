@@ -1,189 +1,202 @@
 #!/usr/bin/env python3
 """
-MCP Server for har2spy - Website Search API Capture Tool
+MCP Server for har2spy
+Website Search API Capture Tool as an MCP server
 """
-
 import subprocess
 import sys
 import json
-import time
+import os
+import tempfile
 from pathlib import Path
-from typing import Any, Dict, List
 
-import asyncio
+sys.path.insert(0, str(Path(__file__).parent))
+
 from mcp.server import Server
-from mcp.server.models import InitializationOptions
+from mcp.server.stdio import stdio_server
 from mcp.types import (
-    Tool, ToolListResult, CallToolResult, ListToolsResult,
-    ListResourcesResult, ReadResourceResult, TextContent,
+    TextContent,
+    ServerCapabilities,
+    InitializeRequest,
+    InitializeResult,
+    Tool,
+    ListToolsResult,
+    ListResourcesResult,
+    ReadResourceResult,
+    CallToolResult,
 )
-from mcp.server.session_manager import ClientSession
-from mcp.client.session import ClientSession as ClientSessionClass
+from mcp.server.models import InitializationOptions
 
-# Create server instance
-app = Server(
-    name="har2spy",
-    version="2.0.0",
-    instructions="MCP server for har2spy - Website Search API Capture Tool",
-)
+har2spy_path = Path(__file__).parent / "har2spy.py"
+server = Server("har2spy", version="2.0.0")
 
-# Handler functions
-async def handle_list_tools():
-    return ToolListResult(
-        tools=[
-            Tool(
-                name="har2spy.scan",
-                description="Scan website and capture HAR data",
-                inputSchema={
-                    "type": "object",
-                    "properties": {
-                        "url": {"type": "string"},
-                        "term": {"type": "string"},
-                        "auto": {"type": "boolean"},
-                        "wait": {"type": "integer", "default": 5},
-                        "output": {"type": "string"},
-                        "format": {"type": "string", "enum": ["python", "openapi", "curl", "all"]},
-                    },
-                    "required": ["url", "term"],
+async def list_tools():
+    return [
+        Tool(
+            name="har2spy.scan",
+            description="Scan website and capture HAR data",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "url": {"type": "string"},
+                    "term": {"type": "string"},
+                    "auto": {"type": "boolean"},
+                    "wait": {"type": "integer"},
+                    "output": {"type": "string"},
+                    "format": {"type": "string", "enum": ["python", "openapi", "curl", "all"]},
                 },
-            ),
-            Tool(
-                name="har2spy.analyze",
-                description="Analyze HAR file",
-                inputSchema={
-                    "type": "object",
-                    "properties": {
-                        "har_file": {"type": "string"},
-                        "output": {"type": "string"},
-                    },
-                    "required": ["har_file"],
+                "required": ["url", "term"],
+            },
+        ),
+        Tool(
+            name="har2spy.analyze",
+            description="Analyze HAR file",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "har_file": {"type": "string"},
+                    "output": {"type": "string"},
                 },
-            ),
-            Tool(
-                name="har2spy.generate",
-                description="Generate API client from HAR",
-                inputSchema={
-                    "type": "object",
-                    "properties": {
-                        "har_file": {"type": "string"},
-                        "format": {"type": "string", "enum": ["python", "openapi", "curl"]},
-                        "output": {"type": "string"},
-                    },
-                    "required": ["har_file"],
+                "required": ["har_file"],
+            },
+        ),
+        Tool(
+            name="har2spy.generate",
+            description="Generate API client from HAR",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "har_file": {"type": "string"},
+                    "format": {"type": "string", "enum": ["python", "openapi", "curl"]},
+                    "output": {"type": "string"},
                 },
-            ),
-            Tool(
-                name="har2spy.db-discovery",
-                description="Database schema discovery from HAR",
-                inputSchema={
-                    "type": "object",
-                    "properties": {
-                        "har_file": {"type": "string"},
-                    },
-                    "required": ["har_file"],
-                },
-            ),
-        ],
-    )
+                "required": ["har_file"],
+            },
+        ),
+        Tool(
+            name="har2spy.db-discovery",
+            description="Database schema discovery from HAR",
+            inputSchema={
+                "type": "object",
+                "properties": {"har_file": {"type": "string"}},
+                "required": ["har_file"],
+            },
+        ),
+        Tool(
+            name="har2spy.version",
+            description="Show version info",
+            inputSchema={},
+        ),
+    ]
 
-async def handle_call_tool(name: str, arguments: dict) -> CallToolResult:
-    """Execute a har2spy tool."""
+async def list_resources():
+    return [
+        {
+            "uri": "har2spy://capabilities",
+            "name": "har2spy-capabilities",
+            "description": "har2spy capabilities",
+            "mimeType": "application/json",
+        }
+    ]
+
+async def read_capabilities():
+    return TextContent(type="text", text=json.dumps({"capabilities": ["har2spy.scan", "har2spy.analyze", "har2spy.generate", "har2spy.db-discovery"]}))
+
+async def handle_call_tool(name: str, args: dict):
     if name == "har2spy.scan":
-        return await _handle_scan(arguments)
-    elif name == "har2spy.analyze":
-        return await _handle_analyze(arguments)
-    elif name == "har2spy.generate":
-        return await _handle_generate(arguments)
-    elif name == "har2spy.db-discovery":
-        return await _handle_db_discovery(arguments)
-    else:
-        return CallToolResult(
-            content=[TextContent(type="text", text=f"Unknown tool: {name}")],
-            isError=True,
-        )
-
-async def _handle_scan(args: dict) -> CallToolResult:
-    """Execute scan."""
-    try:
-        from har2spy import scan_website
-        result = await scan_website(
-            url=args.get("url", ""),
-            term=args.get("term", ""),
-            auto=args.get("auto", False),
-            wait=args.get("wait", 5),
-            output=args.get("output"),
-            fmt=args.get("format", "python"),
-        )
-        return CallToolResult(
-            content=[TextContent(type="text", text=f"Scan completed: {result}")],
-            isError=False,
-        )
-    except Exception as e:
-        return CallToolResult(
-            content=[TextContent(type="text", text=str(e))],
-            isError=True,
-        )
-
-async def _handle_analyze(args: dict) -> CallToolResult:
-    """Execute analyze."""
-    try:
-        from har2spy import load_har, analyze_har
-        analysis = analyze_har(load_har(args.get("har_file", "")))
-        return CallToolResult(
-            content=[TextContent(type="text", text=json.dumps(analysis, indent=2))],
-            isError=False,
-        )
-    except Exception as e:
-        return CallToolResult(
-            content=[TextContent(type="text", text=str(e))],
-            isError=True,
-        )
-
-async def _handle_generate(args: dict) -> CallToolResult:
-    """Execute generate."""
-    try:
-        from har2spy import load_har, analyze_har, generate_python_client, generate_openapi_spec, generate_curl_commands
+        url = args.get("url", "")
+        term = args.get("term", "")
+        auto = args.get("auto", False)
+        wait = args.get("wait", 5)
         fmt = args.get("format", "python")
-        analysis = analyze_har(load_har(args.get("har_file", "")))
+        outfile = args.get("output")
+        with tempfile.TemporaryDirectory() as td:
+            cmd = [sys.executable, str(har2spy_path), "scan", url, "--term", term]
+            if auto:
+                cmd.append("--auto")
+            cmd += ["--wait", str(wait)]
+            if outfile:
+                cmd += ["--output", outfile]
+            else:
+                cmd += ["--output", f"{td}/scan.har.json"]
+            cmd += ["--format", fmt]
+            r = subprocess.run(cmd, capture_output=True, text=True, cwd=td)
+            files = [str(f.relative_to(td)) for f in Path(td).glob("**/*") if f.is_file()]
+            return {"success": r.returncode == 0, "output": r.stdout, "error": r.stderr, "files": files}
 
-        if fmt == "python":
-            code = generate_python_client(analysis, base_url=args.get("url", ""))
-        elif fmt == "openapi":
-            code = generate_openapi_spec(analysis)
-        elif fmt == "curl":
-            code = generate_curl_commands(analysis)
-        else:
-            code = generate_python_client(analysis, base_url=args.get("url", ""))
+    if name == "har2spy.analyze":
+        hf = args.get("har_file", "")
+        with tempfile.TemporaryDirectory() as td:
+            cmd = [sys.executable, str(har2spy_path), "analyze", hf]
+            r = subprocess.run(cmd, capture_output=True, text=True, cwd=td)
+            return {"success": r.returncode == 0, "output": r.stdout}
 
-        return CallToolResult(
-            content=[TextContent(type="text", text=code)],
-            isError=False,
-        )
-    except Exception as e:
-        return CallToolResult(
-            content=[TextContent(type="text", text=str(e))],
-            isError=True,
-        )
+    if name == "har2spy.generate":
+        hf = args.get("har_file", "")
+        fmt = args.get("format", "python")
+        with tempfile.TemporaryDirectory() as td:
+            cmd = [sys.executable, str(har2spy_path), "generate", hf, "--format", fmt]
+            r = subprocess.run(cmd, capture_output=True, text=True, cwd=td)
+            return {"success": r.returncode == 0, "output": r.stdout}
 
-async def _handle_db_discovery(args: dict) -> CallToolResult:
-    """Execute database discovery."""
-    try:
-        from db_discovery.schema_scanner import analyze_har_for_databases, print_discoveries
-        discoveries = analyze_har_for_databases(args.get("har_file", ""))
-        print_discoveries(discoveries)
-        return CallToolResult(
-            content=[TextContent(type="text", text="Database discovery completed")],
-            isError=False,
-        )
-    except Exception as e:
-        return CallToolResult(
-            content=[TextContent(type="text", text=str(e))],
-            isError=True,
-        )
+    if name == "har2spy.db-discovery":
+        hf = args.get("har_file", "")
+        with tempfile.TemporaryDirectory() as td:
+            cmd = [sys.executable, str(har2spy_path), "db-discovery", hf]
+            r = subprocess.run(cmd, capture_output=True, text=True, cwd=td)
+            return {"success": r.returncode == 0, "output": r.stdout}
+
+    if name == "har2spy.version":
+        return {"version": "2.0.0", "description": "har2spy v2.0"}
+
+    return {"error": f"Unknown tool {name}"}
 
 async def main():
-    # This is a placeholder - we need to use the proper server run pattern
-    pass
+    from mcp.server.lowlevel import Server as LowLevelServer
+
+    server = LowLevelServer("har2spy")
+
+    async def handle_init(params):
+        return {
+            "protocolVersion": "2024-11-05",
+            "capabilities": {
+                "tools": {"list": None, "call": None},
+                "resources": {"list": None, "read": None},
+            },
+            "serverInfo": {"name": "har2spy", "version": "2.0.0"},
+        }
+
+    async def handle_tools_list():
+        return [
+            {"name": "har2spy.scan", "description": "Scan", "inputSchema": {"type": "object"}},
+            {"name": "har2spy.analyze", "description": "Analyze"},
+            {"name": "har2spy.generate", "description": "Generate"},
+            {"name": "har2spy.db-discovery", "description": "DB discovery"},
+        ]
+
+    async def handle_tools_call(name, params):
+        return await handle_call_tool(name, params or {})
+
+    async def handle_resources_list():
+        return [{"uri": "har2spy://cap", "name": "cap", "description": "cap", "mimeType": "app/json"}]
+
+    async def handle_read_resource(uri):
+        return TextContent(type="text", text="har2spy capabilities")
+
+    async def handle_list_prompts():
+        return []
+
+    async def handle_get_prompt(name, params):
+        return None
+
+    server.add_request_handler("initialize", dict, handle_init)
+    server.add_request_handler("tools/list", dict, handle_tools_list)
+    server.add_request_handler("tools/call", dict, handle_tools_call)
+    server.add_request_handler("resources/list", dict, handle_resources_list)
+    server.add_request_handler("resources/read", dict, handle_read_resource)
+
+    await server.run()
 
 if __name__ == "__main__":
-    main()
+    import asyncio
+    asyncio.run(main())
