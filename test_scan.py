@@ -24,7 +24,7 @@ run_shell("minis-browser-use navigate --url https://httpbin.org/html")
 time.sleep(2)
 
 print("2. Injecting spy...")
-with open('/var/minis/workspace/har2spy/har2spy.js') as f:
+with open('har2spy.js') as f:
     spy_js = f.read()
 run_jsexec(spy_js)
 

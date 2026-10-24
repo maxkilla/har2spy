@@ -48,6 +48,6 @@ class Get:
         return requests.get(url, headers=self.DEFAULT_HEADERS, timeout=30)
 
 
-    client = Get()
-    result = client.get(q='iPhone 16 Pro', sort='price', order='desc')
-    print(json.dumps(result, indent=2))
+client = Get()
+result = client.get(q='iPhone 16 Pro', sort='price', order='desc')
+print(json.dumps(result, indent=2))

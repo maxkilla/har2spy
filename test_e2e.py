@@ -25,7 +25,7 @@ time.sleep(2)
 
 # 2. Read spy JS
 print("2. Injecting har2spy.js")
-with open('/var/minis/workspace/har2spy/har2spy.js') as f:
+with open('har2spy.js') as f:
     spy_js = f.read()
 
 out, err = run_js(spy_js + "\nreturn window.__har2spy_installed === true;")

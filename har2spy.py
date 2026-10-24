@@ -14,9 +14,9 @@ import subprocess
 # ════════════════════════════════════════════════════════════════
 # Config
 # ════════════════════════════════════════════════════════════════
-BROWSER = "minis-browser-use"
-SPY_JS_PATH = "/var/minis/workspace/har2spy/har2spy.js"
-OUTPUT_DIR = "/var/minis/workspace/har2spy/output"
+BROWSER = "python3"
+SPY_JS_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "har2spy.js")
+OUTPUT_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "output")
 
 
 # ════════════════════════════════════════════════════════════════
@@ -24,7 +24,7 @@ OUTPUT_DIR = "/var/minis/workspace/har2spy/output"
 # ════════════════════════════════════════════════════════════════
 
 def browser_cmd(action, **kwargs):
-    parts = [BROWSER, action]
+    parts = ["python3", "bridge_client.py", action]
     for k, v in kwargs.items():
         flag = "--" + k.replace("_", "-")
         parts.extend([flag, str(v)])
@@ -37,8 +37,10 @@ def browser_eval(script):
     raw = browser_cmd("execute_js", script=script)
     try:
         parsed = json.loads(raw)
-        return parsed.get("data", {}).get("text", "")
-    except json.JSONDecodeError:
+        if isinstance(parsed, dict):
+            return parsed.get("data", {}).get("text", "")
+        return str(parsed)
+    except (json.JSONDecodeError, TypeError):
         return raw
 
 
@@ -51,11 +53,12 @@ def inject_spy():
     if not js_path.exists():
         print("[har2spy] ERROR: har2spy.js not found")
         return False
-    spy_js = js_path.read_text()
-    browser_cmd("execute_js", script=spy_js)
+    browser_cmd("inject_spy", script=str(js_path))
     time.sleep(0.5)
     verify = browser_eval("return typeof window.__har2spy_exportHAR === 'function' ? 'OK' : 'FAIL'")
-    return verify.strip() == "OK"
+    if verify.strip() == "OK" or verify.strip() == "injected":
+        return True
+    return False
 
 def set_marker(name):
     browser_eval(f"window.__har2spy_marker('{name}');")
@@ -101,25 +104,23 @@ def detect_search_elements():
     except:
         return {"inputs": [], "buttons": []}
 
-def perform_search(term, selector=None):
+def perform_search(term, selector=None, wait=2):
     sel = selector or "input[name='q'], input[type='search'], input[role='search']"
-    script = """
-    (function() {
-        var sel = %s;
-        var term = %s;
+    script = f"""
+        var sel = {json.dumps(sel)};
+        var term = {json.dumps(term)};
         var input = document.querySelector(sel);
         if (!input) return 'no_input';
         input.value = term;
-        input.dispatchEvent(new Event('input', {bubbles: true}));
-        input.dispatchEvent(new Event('change', {bubbles: true}));
+        input.dispatchEvent(new Event('input', {{bubbles: true}}));
+        input.dispatchEvent(new Event('change', {{bubbles: true}}));
         var form = input.closest('form');
-        if (form) { form.submit(); return 'form_submitted'; }
+        if (form) {{ form.submit(); return 'form_submitted'; }}
         var params = new URLSearchParams(window.location.search);
         params.set('q', term);
         window.location.search = params.toString();
         return 'url_updated';
-    })();
-    """ % (json.dumps(sel), json.dumps(term))
+    """
     return browser_eval(script)
 
 
@@ -413,7 +414,7 @@ def cmd_scan(args):
         json.dump(har_data, f, indent=2)
     print(f"[har2spy] ✓ HAR saved: {output_path}")
 
-    analysis = analyze_har(har_data["log"])
+    analysis = analyze_har(har_data.get("log", har_data))
     print(f"[har2spy] → Analysis")
     print(f"   API endpoints:   {len(analysis['api_endpoints'])}")
     print(f"   Search endpoints: {len(analysis['search_endpoints'])}")
