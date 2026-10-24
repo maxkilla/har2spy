@@ -1,0 +1,308 @@
+{
+  "total_entries": 3,
+  "api_endpoints": [
+    {
+      "method": "GET",
+      "url": "https://httpbin.org/get?q=iPhone+16+Pro&sort=price&order=desc",
+      "path": "/get",
+      "query_params": [
+        "q",
+        "sort",
+        "order"
+      ],
+      "query_values": {
+        "q": [
+          "iPhone 16 Pro"
+        ],
+        "sort": [
+          "price"
+        ],
+        "order": [
+          "desc"
+        ]
+      },
+      "request_body": "",
+      "request_headers": {
+        "accept": "application/json",
+        "accept-encoding": "gzip, deflate",
+        "user-agent": "Mozilla/5.0",
+        "referer": "https://httpbin.org/"
+      },
+      "status": 200,
+      "response_type": "json",
+      "response_snippet": "{\"args\":{\"q\":\"iPhone 16 Pro\",\"sort\":\"price\",\"order\":\"desc\"},\"headers\":{\"Accept\":\"application/json\"},\"origin\":\"1.2.3.4\",\"url\":\"https://httpbin.org/get?q=iPhone+16+Pro&sort=price&order=desc\"}",
+      "timings": {
+        "send": 0,
+        "wait": 80,
+        "receive": 40
+      },
+      "time_ms": 120,
+      "is_xhr": true,
+      "_raw": {
+        "startedDateTime": "2026-10-23T21:00:01Z",
+        "time": 120,
+        "request": {
+          "method": "GET",
+          "url": "https://httpbin.org/get?q=iPhone+16+Pro&sort=price&order=desc",
+          "httpVersion": "HTTP/1.1",
+          "cookies": [],
+          "headers": [
+            {
+              "name": "Accept",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept-Encoding",
+              "value": "gzip, deflate"
+            },
+            {
+              "name": "User-Agent",
+              "value": "Mozilla/5.0"
+            },
+            {
+              "name": "Referer",
+              "value": "https://httpbin.org/"
+            }
+          ],
+          "queryString": [],
+          "bodySize": 0,
+          "headersSize": -1,
+          "content": {
+            "size": 0,
+            "mimeType": ""
+          }
+        },
+        "response": {
+          "status": 200,
+          "statusText": "OK",
+          "httpVersion": "HTTP/1.1",
+          "cookies": [],
+          "headers": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "headersSize": -1,
+          "bodySize": 320,
+          "content": {
+            "size": 320,
+            "mimeType": "application/json",
+            "text": "{\"args\":{\"q\":\"iPhone 16 Pro\",\"sort\":\"price\",\"order\":\"desc\"},\"headers\":{\"Accept\":\"application/json\"},\"origin\":\"1.2.3.4\",\"url\":\"https://httpbin.org/get?q=iPhone+16+Pro&sort=price&order=desc\"}"
+          }
+        },
+        "cache": {},
+        "timings": {
+          "send": 0,
+          "wait": 80,
+          "receive": 40
+        },
+        "serverIPAddress": "1.2.3.4",
+        "connection": "12345",
+        "pageref": "page_1",
+        "_xhr": true
+      },
+      "category": "search"
+    },
+    {
+      "method": "POST",
+      "url": "https://httpbin.org/post?category=phones",
+      "path": "/post",
+      "query_params": [
+        "category"
+      ],
+      "query_values": {
+        "category": [
+          "phones"
+        ]
+      },
+      "request_body": "{\"search\":\"iPhone\",\"filters\":{\"brand\":\"Apple\"},\"page\":1}",
+      "request_headers": {
+        "content-type": "application/json",
+        "accept": "application/json",
+        "x-api-key": "secret123"
+      },
+      "status": 200,
+      "response_type": "json",
+      "response_snippet": "{\"results\":[],\"total\":0,\"page\":1,\"query\":\"iPhone\"}",
+      "timings": {
+        "send": 0,
+        "wait": 60,
+        "receive": 35
+      },
+      "time_ms": 95,
+      "is_xhr": true,
+      "_raw": {
+        "startedDateTime": "2026-10-23T21:00:03Z",
+        "time": 95,
+        "request": {
+          "method": "POST",
+          "url": "https://httpbin.org/post?category=phones",
+          "httpVersion": "HTTP/1.1",
+          "cookies": [],
+          "headers": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            },
+            {
+              "name": "X-API-Key",
+              "value": "secret123"
+            }
+          ],
+          "queryString": [],
+          "postData": {
+            "mimeType": "application/json",
+            "text": "{\"search\":\"iPhone\",\"filters\":{\"brand\":\"Apple\"},\"page\":1}"
+          },
+          "bodySize": 82,
+          "headersSize": -1,
+          "content": {
+            "size": 0,
+            "mimeType": ""
+          }
+        },
+        "response": {
+          "status": 200,
+          "statusText": "OK",
+          "httpVersion": "HTTP/1.1",
+          "cookies": [],
+          "headers": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "headersSize": -1,
+          "bodySize": 200,
+          "content": {
+            "size": 200,
+            "mimeType": "application/json",
+            "text": "{\"results\":[],\"total\":0,\"page\":1,\"query\":\"iPhone\"}"
+          }
+        },
+        "cache": {},
+        "timings": {
+          "send": 0,
+          "wait": 60,
+          "receive": 35
+        },
+        "serverIPAddress": "1.2.3.4",
+        "connection": "12346",
+        "pageref": "page_1",
+        "_xhr": true
+      }
+    }
+  ],
+  "search_endpoints": [
+    {
+      "method": "GET",
+      "url": "https://httpbin.org/get?q=iPhone+16+Pro&sort=price&order=desc",
+      "path": "/get",
+      "query_params": [
+        "q",
+        "sort",
+        "order"
+      ],
+      "query_values": {
+        "q": [
+          "iPhone 16 Pro"
+        ],
+        "sort": [
+          "price"
+        ],
+        "order": [
+          "desc"
+        ]
+      },
+      "request_body": "",
+      "request_headers": {
+        "accept": "application/json",
+        "accept-encoding": "gzip, deflate",
+        "user-agent": "Mozilla/5.0",
+        "referer": "https://httpbin.org/"
+      },
+      "status": 200,
+      "response_type": "json",
+      "response_snippet": "{\"args\":{\"q\":\"iPhone 16 Pro\",\"sort\":\"price\",\"order\":\"desc\"},\"headers\":{\"Accept\":\"application/json\"},\"origin\":\"1.2.3.4\",\"url\":\"https://httpbin.org/get?q=iPhone+16+Pro&sort=price&order=desc\"}",
+      "timings": {
+        "send": 0,
+        "wait": 80,
+        "receive": 40
+      },
+      "time_ms": 120,
+      "is_xhr": true,
+      "_raw": {
+        "startedDateTime": "2026-10-23T21:00:01Z",
+        "time": 120,
+        "request": {
+          "method": "GET",
+          "url": "https://httpbin.org/get?q=iPhone+16+Pro&sort=price&order=desc",
+          "httpVersion": "HTTP/1.1",
+          "cookies": [],
+          "headers": [
+            {
+              "name": "Accept",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept-Encoding",
+              "value": "gzip, deflate"
+            },
+            {
+              "name": "User-Agent",
+              "value": "Mozilla/5.0"
+            },
+            {
+              "name": "Referer",
+              "value": "https://httpbin.org/"
+            }
+          ],
+          "queryString": [],
+          "bodySize": 0,
+          "headersSize": -1,
+          "content": {
+            "size": 0,
+            "mimeType": ""
+          }
+        },
+        "response": {
+          "status": 200,
+          "statusText": "OK",
+          "httpVersion": "HTTP/1.1",
+          "cookies": [],
+          "headers": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "headersSize": -1,
+          "bodySize": 320,
+          "content": {
+            "size": 320,
+            "mimeType": "application/json",
+            "text": "{\"args\":{\"q\":\"iPhone 16 Pro\",\"sort\":\"price\",\"order\":\"desc\"},\"headers\":{\"Accept\":\"application/json\"},\"origin\":\"1.2.3.4\",\"url\":\"https://httpbin.org/get?q=iPhone+16+Pro&sort=price&order=desc\"}"
+          }
+        },
+        "cache": {},
+        "timings": {
+          "send": 0,
+          "wait": 80,
+          "receive": 40
+        },
+        "serverIPAddress": "1.2.3.4",
+        "connection": "12345",
+        "pageref": "page_1",
+        "_xhr": true
+      },
+      "category": "search"
+    }
+  ],
+  "auth_endpoints": [],
+  "analyzed_at": "2026-10-23T22:02:55.181566"
+}
